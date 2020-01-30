@@ -8,7 +8,12 @@ using System.Linq;
 
 namespace RPGcardsGenerator
 {
-    public class DrawableCounter : Transformable, Drawable
+    public interface IDrawableWidget : Drawable
+    {
+        int Height { get; }
+    }
+
+    public class DrawableCounter : Transformable, IDrawableWidget
     {
         public DrawableCounter()
         {
@@ -18,6 +23,11 @@ namespace RPGcardsGenerator
         }
 
         public IList<Texture> Back { get; set; }
+
+        public int Height => (Style & Template.Counter.VERTICAL) == 0 ?
+            (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? IconHeight * 1.5f : IconHeight) :
+            (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? (IconHeight + 4) * .5f * (Max - 1) : (IconHeight + 4) * (Max - 1));
+
         public int IconHeight { get; set; }
         public IList<Texture> Icons { get; set; }
         public Text InternalText { get; set; }
@@ -96,24 +106,31 @@ namespace RPGcardsGenerator
         }
     }
 
-    public class DrawableField : Text
+    public class DrawableField : Text, IDrawableWidget
     {
+        public int Height => (int)CharacterSize;
     }
 
-    public class DrawableFieldList : Transformable, Drawable
+    public class DrawableFieldList : Transformable, IDrawableWidget
     {
-        private List<dynamic> ToDraw { get; set; }
+        public int Height => throw new NotImplementedException();
+
+        private List<IDrawableWidget> ToDraw { get; set; }
 
         public void Draw(RenderTarget target, RenderStates states)
         {
             states.Transform *= Transform;
             foreach (var item in ToDraw)
             {
+                target.Draw(item, states);
+                var tr = Transform.Identity;
+                tr.Translate(0, item.Height + 5);
+                states.Transform *= tr;
             }
         }
     }
 
-    public class DrawableGauge : Transformable, Drawable
+    public class DrawableGauge : Transformable, IDrawableWidget
     {
         public DrawableGauge()
         {
@@ -124,6 +141,7 @@ namespace RPGcardsGenerator
 
         public Texture Bar { get; set; }
 
+        public int Height => (int)Math.Max(InternalText.CharacterSize, (int)Bar.Size.Y);
         public Text InternalText { get; set; }
 
         public float Max { get; set; }
@@ -185,18 +203,22 @@ namespace RPGcardsGenerator
         }
     }
 
-    public class DrawableImage : RectangleShape
+    public class DrawableImage : RectangleShape, IDrawableWidget
     {
+        public int Height => throw new NotImplementedException();
     }
 
-    public class DrawableStatGraph : Transformable, Drawable
+    public class DrawableStatGraph : Transformable, IDrawableWidget
     {
+        public int Height => throw new NotImplementedException();
+
         public void Draw(RenderTarget target, RenderStates states)
         {
         }
     }
 
-    public class DrawableText : Text
+    public class DrawableText : Text, IDrawableWidget
     {
+        public int Height => throw new NotImplementedException();
     }
 }
