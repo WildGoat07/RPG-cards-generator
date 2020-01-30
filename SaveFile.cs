@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Text;
 
 namespace RPGcardsGenerator
 {
@@ -26,15 +25,10 @@ namespace RPGcardsGenerator
         public class Counter : Text
         {
             public const int ALT1 = 2;
-
             public const int ALT2 = 4;
-
             public const int LEFT = 0;
-
             public const int RIGHT = 1;
-
             public const int STACKED = 16;
-
             public const int VERTICAL = 8;
 
             public Counter() : base()
@@ -44,7 +38,9 @@ namespace RPGcardsGenerator
             }
 
             public List<Bitmap> Back { get; set; }
+            public int IconHeight { get; set; }
             public List<Bitmap> Icons { get; set; }
+            public int Max { get; set; }
             public int Style { get; set; }
             public int Value { get; set; }
         }
@@ -61,6 +57,18 @@ namespace RPGcardsGenerator
             public int Size { get; set; }
         }
 
+        public class FieldList : IWidget
+        {
+            public FieldList()
+            {
+                Data = new List<(string, int, float)>();
+            }
+
+            public List<(string, int, float)> Data { get; set; }
+            public RectangleF Location { get; set; }
+            public Text Model { get; set; }
+        }
+
         [Serializable]
         public class Gauge : Text
         {
@@ -70,6 +78,7 @@ namespace RPGcardsGenerator
             public const int VERTICAL = 4;
             public Bitmap Back { get; set; }
             public Bitmap Bar { get; set; }
+            public int Height { get; set; }
             public float Max { get; set; }
             public int Style { get; set; }
             public float Value { get; set; }
@@ -92,13 +101,9 @@ namespace RPGcardsGenerator
             }
 
             public string Font { get; set; }
-
             public Color InnerColor { get; set; }
-
             public RectangleF Location { get; set; }
-
             public Color OutsideColor { get; set; }
-
             public float OutsideThickness { get; set; }
             public int Size { get; set; }
             public List<(Header, int)> Statistics { get; set; }

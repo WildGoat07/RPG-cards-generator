@@ -17,6 +17,8 @@ namespace RPGcardsGenerator
     /// </summary>
     public partial class App : Application
     {
+        public static Font Roboto = new Font(RPGcardsGenerator.Properties.Resources.Roboto_Regular);
+        public static Template CurrentFile { get; set; }
         public static EditorPreview Preview { get; set; }
 
         public static Image CreateSFMLImage(System.Drawing.Bitmap img)
@@ -33,6 +35,7 @@ namespace RPGcardsGenerator
 
         public static void StartEditor(Template file)
         {
+            CurrentFile = file;
             Task.Run(() =>
             {
                 Preview = new EditorPreview((float)file.Background.Width / file.Background.Height);
