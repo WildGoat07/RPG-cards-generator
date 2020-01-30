@@ -100,8 +100,100 @@ namespace RPGcardsGenerator
     {
     }
 
+    public class DrawableFieldList : Transformable, Drawable
+    {
+        private List<dynamic> ToDraw { get; set; }
+
+        public void Draw(RenderTarget target, RenderStates states)
+        {
+            states.Transform *= Transform;
+            foreach (var item in ToDraw)
+            {
+            }
+        }
+    }
+
+    public class DrawableGauge : Transformable, Drawable
+    {
+        public DrawableGauge()
+        {
+            InternalText = new Text();
+        }
+
+        public Texture Back { get; set; }
+
+        public Texture Bar { get; set; }
+
+        public Text InternalText { get; set; }
+
+        public float Max { get; set; }
+
+        public int Style { get; set; }
+
+        public float Value { get; set; }
+
+        public void Draw(RenderTarget target, RenderStates states)
+        {
+            states.Transform *= Transform;
+            InternalText.Origin = new Vector2f(0, InternalText.CharacterSize / 2);
+            InternalText.Position = new Vector2f(0, Bar.Size.Y / 2);
+            target.Draw(InternalText, states);
+            var tr = Transform.Identity;
+            tr.Translate(InternalText.GetGlobalBounds().Width + 5, 0);
+            states.Transform *= tr;
+            target.Draw(new RectangleShape { Size = (Vector2f)Bar.Size, Texture = Back }, states);
+            if ((Style & Template.Gauge.VERTICAL) == 0)
+            {
+                var rect = new RectangleShape(new Vector2f(Bar.Size.X * Value / Max, Bar.Size.Y));
+                rect.Texture = Bar;
+                if ((Style & Template.Gauge.LEFT) != 0)
+                    rect.TextureRect = new IntRect(0, 0, (int)(Bar.Size.X * Value / Max), (int)Bar.Size.Y);
+                else if ((Style & Template.Gauge.RIGHT) != 0)
+                {
+                    rect.TextureRect = new IntRect((int)(Bar.Size.X * (Max - Value) / Max), 0, (int)(Bar.Size.X * Value / Max), (int)Bar.Size.Y);
+                    rect.Position = new Vector2f(Back.Size.X, 0);
+                    rect.Origin = new Vector2f(rect.Size.X, 0);
+                }
+                else
+                {
+                    rect.TextureRect = new IntRect((int)(Bar.Size.X / 2 - Bar.Size.X * Value / Max / 2), 0, (int)(Bar.Size.X * Value / Max), (int)Bar.Size.Y);
+                    rect.Position = new Vector2f(Back.Size.X / 2, 0);
+                    rect.Origin = new Vector2f(rect.Size.X / 2, 0);
+                }
+                target.Draw(rect, states);
+            }
+            else
+            {
+                var rect = new RectangleShape(new Vector2f(Bar.Size.X, Bar.Size.Y * Value / Max));
+                rect.Texture = Bar;
+                if ((Style & Template.Gauge.LEFT) != 0)
+                    rect.TextureRect = new IntRect(0, 0, (int)Bar.Size.X, (int)(Bar.Size.Y * Value / Max));
+                else if ((Style & Template.Gauge.RIGHT) != 0)
+                {
+                    rect.TextureRect = new IntRect(0, (int)(Bar.Size.Y * (Max - Value) / Max), (int)Bar.Size.X, (int)(Bar.Size.Y * Value / Max));
+                    rect.Position = new Vector2f(0, Back.Size.Y);
+                    rect.Origin = new Vector2f(0, rect.Size.Y);
+                }
+                else
+                {
+                    rect.TextureRect = new IntRect(0, (int)(Bar.Size.Y / 2 - Bar.Size.Y * Value / Max / 2), (int)Bar.Size.X, (int)(Bar.Size.Y * Value / Max));
+                    rect.Position = new Vector2f(0, Back.Size.Y / 2);
+                    rect.Origin = new Vector2f(0, rect.Size.Y / 2);
+                }
+                target.Draw(rect, states);
+            }
+        }
+    }
+
     public class DrawableImage : RectangleShape
     {
+    }
+
+    public class DrawableStatGraph : Transformable, Drawable
+    {
+        public void Draw(RenderTarget target, RenderStates states)
+        {
+        }
     }
 
     public class DrawableText : Text

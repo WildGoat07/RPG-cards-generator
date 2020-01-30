@@ -22,14 +22,15 @@ namespace RPGcardsGenerator
         public Dictionary<string, byte[]> CustomFonts { get; set; }
         public List<(string, IWidget)> Widgets { get; set; }
 
+        [Serializable]
         public class Counter : Text
         {
-            public const int ALT1 = 2;
+            public const int ALT1 = 8;
             public const int ALT2 = 4;
-            public const int LEFT = 0;
-            public const int RIGHT = 1;
-            public const int STACKED = 16;
-            public const int VERTICAL = 8;
+            public const int LEFT = 1;
+            public const int RIGHT = 2;
+            public const int STACKED = 32;
+            public const int VERTICAL = 16;
 
             public Counter() : base()
             {
@@ -57,6 +58,7 @@ namespace RPGcardsGenerator
             public int Size { get; set; }
         }
 
+        [Serializable]
         public class FieldList : IWidget
         {
             public FieldList()
@@ -72,13 +74,12 @@ namespace RPGcardsGenerator
         [Serializable]
         public class Gauge : Text
         {
-            public const int LEFT = 0;
-            public const int MIDDLE = 1;
-            public const int RIGHT = 2;
-            public const int VERTICAL = 4;
+            public const int LEFT = 1;
+            public const int MIDDLE = 2;
+            public const int RIGHT = 4;
+            public const int VERTICAL = 8;
             public Bitmap Back { get; set; }
             public Bitmap Bar { get; set; }
-            public int Height { get; set; }
             public float Max { get; set; }
             public int Style { get; set; }
             public float Value { get; set; }
