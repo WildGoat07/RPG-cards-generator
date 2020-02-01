@@ -20,11 +20,11 @@ namespace RPGcardsGenerator
                 mode = new VideoMode((uint)(desktop.Height / 1.5f * ratio), (uint)(desktop.Height / 1.5f));
             Window = new RenderWindow(mode, "aperçu", Styles.Titlebar, new ContextSettings { AntialiasingLevel = 8 });
             Window.SetVerticalSyncEnabled(true);
-            ToDraw = new Drawable[0];
+            ToDraw = new IDrawableWidget[0];
         }
 
-        public IEnumerable<Drawable> ToDraw { get; set; }
-
+        public Drawable Background { get; set; }
+        public IList<IDrawableWidget> ToDraw { get; set; }
         public RenderWindow Window { get; set; }
 
         public void Start()
@@ -34,8 +34,10 @@ namespace RPGcardsGenerator
                 Window.WaitAndDispatchEvents();
                 Window.Clear(Color.White);
 
+                if (Background != null)
+                    Window.Draw(Background);
                 foreach (var drawable in ToDraw)
-                    Window.Draw(drawable);
+                    drawable.DrawWidget(Window);
 
                 Window.Display();
             }

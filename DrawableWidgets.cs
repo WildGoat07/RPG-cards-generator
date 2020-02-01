@@ -13,6 +13,13 @@ namespace RPGcardsGenerator
         FloatRect Bounds { get; }
         bool drawOutline { get; set; }
         int Height { get; }
+
+        void DrawWidget(RenderTarget target, RenderStates states);
+    }
+
+    public static partial class Extensions
+    {
+        public static void DrawWidget(this IDrawableWidget widget, RenderTarget target) => widget.DrawWidget(target, RenderStates.Default);
     }
 
     public class DrawableCounter : Transformable, IDrawableWidget
@@ -40,7 +47,7 @@ namespace RPGcardsGenerator
                 }
                 else
                 {
-                    if ((Style & Template.Counter.VERTICAL) != 0)
+                    if ((Style & Template.Counter.VERTICAL) == 0)
                     {
                         var result = new FloatRect();
                         result.Width = InternalText.GetGlobalBounds().Width + 5;
@@ -69,7 +76,7 @@ namespace RPGcardsGenerator
         public bool drawOutline { get; set; }
 
         public int Height => (Style & Template.Counter.VERTICAL) == 0 ?
-                            (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? Icons.First().Size.Y * 1.5f : Icons.First().Size.Y) :
+                            (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? (Icons.First().Size.Y + 4) * 1.5f : Icons.First().Size.Y) :
             (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? (Icons.First().Size.Y + 4) * (Max / 2f + .5f) : (Icons.First().Size.Y + 4) * Max);
 
         public IList<Texture> Icons { get; set; }
@@ -145,7 +152,11 @@ namespace RPGcardsGenerator
                         disp(Back[Math.Min(Back.Count - 1, i - 1)], position);
                 }
             }
+            if (drawOutline)
+                target.Draw(new RectangleShape(new Vector2f(Bounds.Width, Bounds.Height)) { OutlineColor = Color.Green, OutlineThickness = -1, FillColor = Color.Transparent }, states);
         }
+
+        public void DrawWidget(RenderTarget target, RenderStates states) => Draw(target, states);
     }
 
     public class DrawableField : Text, IDrawableWidget
@@ -155,9 +166,16 @@ namespace RPGcardsGenerator
             drawOutline = false;
         }
 
-        public FloatRect Bounds => GetGlobalBounds();
+        public FloatRect Bounds => new FloatRect(0, 0, GetGlobalBounds().Width, CharacterSize);
         public bool drawOutline { get; set; }
         public int Height => (int)CharacterSize;
+
+        public void DrawWidget(RenderTarget target, RenderStates states)
+        {
+            Draw(target, states);
+            if (drawOutline)
+                target.Draw(new RectangleShape(new Vector2f(Bounds.Width, Bounds.Height)) { OutlineColor = Color.Green, OutlineThickness = -1, FillColor = Color.Transparent }, states);
+        }
     }
 
     public class DrawableFieldList : Transformable, IDrawableWidget
@@ -185,20 +203,27 @@ namespace RPGcardsGenerator
         }
 
         public bool drawOutline { get; set; }
+
         public int Height => throw new NotImplementedException();
+
         public List<IDrawableWidget> ToDraw { get; set; }
 
         public void Draw(RenderTarget target, RenderStates states)
         {
             states.Transform *= Transform;
+            var intialStates = states;
             foreach (var item in ToDraw)
             {
-                target.Draw(item, states);
+                item.DrawWidget(target, states);
                 var tr = Transform.Identity;
                 tr.Translate(0, item.Height + 5);
                 states.Transform *= tr;
             }
+            if (drawOutline)
+                target.Draw(new RectangleShape(new Vector2f(Bounds.Width, Bounds.Height)) { OutlineColor = Color.Green, OutlineThickness = -1, FillColor = Color.Transparent }, intialStates);
         }
+
+        public void DrawWidget(RenderTarget target, RenderStates states) => Draw(target, states);
     }
 
     public class DrawableGauge : Transformable, IDrawableWidget
@@ -226,7 +251,9 @@ namespace RPGcardsGenerator
         }
 
         public bool drawOutline { get; set; }
+
         public int Height => (int)Math.Max(InternalText.CharacterSize, (int)Bar.Size.Y);
+
         public Text InternalText { get; set; }
 
         public float Max { get; set; }
@@ -284,8 +311,12 @@ namespace RPGcardsGenerator
                     rect.Origin = new Vector2f(0, rect.Size.Y / 2);
                 }
                 target.Draw(rect, states);
+                if (drawOutline)
+                    target.Draw(new RectangleShape(new Vector2f(Bounds.Width, Bounds.Height)) { OutlineColor = Color.Green, OutlineThickness = -1, FillColor = Color.Transparent }, states);
             }
         }
+
+        public void DrawWidget(RenderTarget target, RenderStates states) => Draw(target, states);
     }
 
     public class DrawableImage : RectangleShape, IDrawableWidget
@@ -296,8 +327,17 @@ namespace RPGcardsGenerator
         }
 
         public FloatRect Bounds => GetGlobalBounds();
+
         public bool drawOutline { get; set; }
+
         public int Height => throw new NotImplementedException();
+
+        public void DrawWidget(RenderTarget target, RenderStates states)
+        {
+            Draw(target, states);
+            if (drawOutline)
+                target.Draw(new RectangleShape(new Vector2f(Bounds.Width, Bounds.Height)) { OutlineColor = Color.Green, OutlineThickness = -1, FillColor = Color.Transparent }, states);
+        }
     }
 
     public class DrawableStatGraph : Transformable, IDrawableWidget
@@ -309,16 +349,27 @@ namespace RPGcardsGenerator
         }
 
         public FloatRect Bounds => new FloatRect(new Vector2f(), Size);
+
         public int CharacterHeight { get; set; }
+
         public bool drawOutline { get; set; }
+
         public int Height => throw new NotImplementedException();
+
         public Color? HighGraphColor { get; set; }
+
         public Color InnerColor { get; set; }
+
         public Color LowGraphColor { get; set; }
+
         public int Max { get; set; }
+
         public Color OutsideColor { get; set; }
+
         public float OutsideThickness { get; set; }
+
         public Vector2f Size { get; set; }
+
         public List<(Header, int)> Statistics { get; set; }
 
         public void Draw(RenderTarget target, RenderStates states)
@@ -450,7 +501,11 @@ namespace RPGcardsGenerator
             target.Draw(lines.ToArray(), PrimitiveType.Lines, states);
             foreach (var item in icons)
                 target.Draw(item, states);
+            if (drawOutline)
+                target.Draw(new RectangleShape(new Vector2f(Bounds.Width, Bounds.Height)) { OutlineColor = Color.Green, OutlineThickness = -1, FillColor = Color.Transparent }, states);
         }
+
+        public void DrawWidget(RenderTarget target, RenderStates states) => Draw(target, states);
 
         public class Header
         {
@@ -471,8 +526,17 @@ namespace RPGcardsGenerator
             drawOutline = false;
         }
 
-        public FloatRect Bounds => GetGlobalBounds();
+        public FloatRect Bounds => new FloatRect(0, 0, GetGlobalBounds().Width, CharacterSize);
+
         public bool drawOutline { get; set; }
+
         public int Height => throw new NotImplementedException();
+
+        public void DrawWidget(RenderTarget target, RenderStates states)
+        {
+            Draw(target, states);
+            if (drawOutline)
+                target.Draw(new RectangleShape(new Vector2f(Bounds.Width, Bounds.Height)) { OutlineColor = Color.Green, OutlineThickness = -1, FillColor = Color.Transparent }, states);
+        }
     }
 }
