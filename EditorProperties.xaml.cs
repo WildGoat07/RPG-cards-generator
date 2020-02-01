@@ -17,7 +17,7 @@ namespace RPGcardsGenerator
     /// </summary>
     public partial class EditorProperties : Window
     {
-        public EditorProperties()
+        public EditorProperties() : base()
         {
             InitializeComponent();
         }

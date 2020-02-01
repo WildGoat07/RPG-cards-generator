@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RPGcardsGenerator"
         mc:Ignorable="d"
-        Title="Proprietes" Height="600" Width="450">
+        Title="Propriétés" Height="600" Width="450" Background="#141414">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*" />
