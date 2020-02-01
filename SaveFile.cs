@@ -56,6 +56,7 @@ namespace RPGcardsGenerator
             public Color OutsideColor { get; set; }
             public float OutsideThickness { get; set; }
             public int Size { get; set; }
+            public Bitmap TextImage { get; set; }
         }
 
         [Serializable]
@@ -109,6 +110,7 @@ namespace RPGcardsGenerator
             public float OutsideThickness { get; set; }
             public Vector2 Size { get; set; }
             public List<(Header, int)> Statistics { get; set; }
+            public Bitmap TextImage { get; set; }
 
             [Serializable]
             public class Header
@@ -128,6 +130,7 @@ namespace RPGcardsGenerator
             public Color OutsideColor { get; set; }
             public float OutsideThickness { get; set; }
             public int Size { get; set; }
+            public Bitmap TextImage { get; set; }
         }
     }
 }

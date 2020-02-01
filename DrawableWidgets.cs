@@ -17,9 +17,44 @@ namespace RPGcardsGenerator
         void DrawWidget(RenderTarget target, RenderStates states);
     }
 
-    public static partial class Extensions
+    public static partial class Utilities
     {
+        public static Drawable ApplyTexture(Drawable toDraw, FloatRect drawableBounds, Texture ToApply, Color background) =>
+            ApplyTexture(toDraw, (IntRect)drawableBounds, ToApply, background, BlendMode.Multiply);
+
+        public static Drawable ApplyTexture(Drawable toDraw, FloatRect drawableBounds, Texture ToApply, Color background, BlendMode blendMode) =>
+            ApplyTexture(toDraw, (IntRect)drawableBounds, ToApply, background, blendMode);
+
+        public static Drawable ApplyTexture(Drawable toDraw, IntRect drawableBounds, Texture ToApply, Color background) =>
+            ApplyTexture(toDraw, drawableBounds, ToApply, background, BlendMode.Multiply);
+
+        public static Drawable ApplyTexture(Drawable toDraw, IntRect drawableBounds, Texture ToApply, Color background, BlendMode blendMode)
+        {
+            var states = RenderStates.Default;
+            states.Transform.Translate(450, 450);
+            var position = new Vector2f(drawableBounds.Left, drawableBounds.Top);
+            var size = (Vector2f)drawableBounds.Size();
+            var rect = new RectangleShape(new Vector2f(1500, 1500));
+            App.VBO.Clear(background);
+            App.VBO.Draw(toDraw, states);
+            states.BlendMode = blendMode;
+            if (ToApply != null)
+                App.VBO.Draw(new RectangleShape(((FloatRect)drawableBounds).Size()) { Texture = ToApply, Position = position }, states);
+            App.VBO.Display();
+            rect.Texture = App.VBO.Texture;
+            rect.Position = -new Vector2f(450, 450);
+            return rect;
+        }
+
         public static void DrawWidget(this IDrawableWidget widget, RenderTarget target) => widget.DrawWidget(target, RenderStates.Default);
+
+        public static Color GetBorderColor(this Text t) => t.OutlineThickness == 0 ? t.FillColor : t.OutlineColor;
+
+        public static Color MakeTransparent(this Color c) => new Color(c.R, c.G, c.B, 0);
+
+        public static Vector2f Size(this FloatRect rect) => new Vector2f(rect.Width, rect.Height);
+
+        public static Vector2i Size(this IntRect rect) => new Vector2i(rect.Width, rect.Height);
     }
 
     public class DrawableCounter : Transformable, IDrawableWidget
@@ -83,6 +118,7 @@ namespace RPGcardsGenerator
         public Text InternalText { get; set; }
         public int Max { get; set; }
         public int Style { get; set; }
+        public Texture TextImage { get; set; }
         public int Value { get; set; }
 
         public void Draw(RenderTarget target, RenderStates states)
@@ -95,7 +131,8 @@ namespace RPGcardsGenerator
             else
                 InternalText.Position = new Vector2f(0, (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? Vspace * .5f * (Max - 1) : Vspace * (Max - 1)) / 2);
             states.Transform *= Transform;
-            target.Draw(InternalText, states);
+            var initialStates = states;
+            target.Draw(Utilities.ApplyTexture(InternalText, InternalText.GetGlobalBounds(), TextImage, InternalText.GetBorderColor().MakeTransparent()), states);
             var tr = Transform.Identity;
             tr.Translate(InternalText.GetGlobalBounds().Width + 5, 0);
             states.Transform *= tr;
@@ -153,7 +190,7 @@ namespace RPGcardsGenerator
                 }
             }
             if (drawOutline)
-                target.Draw(new RectangleShape(new Vector2f(Bounds.Width, Bounds.Height)) { OutlineColor = Color.Green, OutlineThickness = -1, FillColor = Color.Transparent }, states);
+                target.Draw(new RectangleShape(new Vector2f(Bounds.Width, Bounds.Height)) { OutlineColor = Color.Green, OutlineThickness = -1, FillColor = Color.Transparent }, initialStates);
         }
 
         public void DrawWidget(RenderTarget target, RenderStates states) => Draw(target, states);
@@ -169,10 +206,11 @@ namespace RPGcardsGenerator
         public FloatRect Bounds => new FloatRect(0, 0, GetGlobalBounds().Width, CharacterSize);
         public bool drawOutline { get; set; }
         public int Height => (int)CharacterSize;
+        public Texture TextImage { get; set; }
 
         public void DrawWidget(RenderTarget target, RenderStates states)
         {
-            Draw(target, states);
+            target.Draw(Utilities.ApplyTexture(this, GetGlobalBounds(), TextImage, this.GetBorderColor().MakeTransparent()), states);
             if (drawOutline)
                 target.Draw(new RectangleShape(new Vector2f(Bounds.Width, Bounds.Height)) { OutlineColor = Color.Green, OutlineThickness = -1, FillColor = Color.Transparent }, states);
         }
@@ -203,10 +241,9 @@ namespace RPGcardsGenerator
         }
 
         public bool drawOutline { get; set; }
-
         public int Height => throw new NotImplementedException();
-
         public List<IDrawableWidget> ToDraw { get; set; }
+        private IDrawableWidget Template { get; set; }
 
         public void Draw(RenderTarget target, RenderStates states)
         {
@@ -235,7 +272,6 @@ namespace RPGcardsGenerator
         }
 
         public Texture Back { get; set; }
-
         public Texture Bar { get; set; }
 
         public FloatRect Bounds
@@ -251,15 +287,11 @@ namespace RPGcardsGenerator
         }
 
         public bool drawOutline { get; set; }
-
         public int Height => (int)Math.Max(InternalText.CharacterSize, (int)Bar.Size.Y);
-
         public Text InternalText { get; set; }
-
         public float Max { get; set; }
-
         public int Style { get; set; }
-
+        public Texture TextImage { get; set; }
         public float Value { get; set; }
 
         public void Draw(RenderTarget target, RenderStates states)
@@ -267,7 +299,7 @@ namespace RPGcardsGenerator
             states.Transform *= Transform;
             InternalText.Origin = new Vector2f(0, InternalText.CharacterSize / 2);
             InternalText.Position = new Vector2f(0, Bar.Size.Y / 2);
-            target.Draw(InternalText, states);
+            target.Draw(Utilities.ApplyTexture(InternalText, InternalText.GetGlobalBounds(), TextImage, InternalText.GetBorderColor().MakeTransparent()), states);
             var tr = Transform.Identity;
             tr.Translate(InternalText.GetGlobalBounds().Width + 5, 0);
             states.Transform *= tr;
@@ -349,28 +381,18 @@ namespace RPGcardsGenerator
         }
 
         public FloatRect Bounds => new FloatRect(new Vector2f(), Size);
-
         public int CharacterHeight { get; set; }
-
         public bool drawOutline { get; set; }
-
         public int Height => throw new NotImplementedException();
-
         public Color? HighGraphColor { get; set; }
-
         public Color InnerColor { get; set; }
-
         public Color LowGraphColor { get; set; }
-
         public int Max { get; set; }
-
         public Color OutsideColor { get; set; }
-
         public float OutsideThickness { get; set; }
-
         public Vector2f Size { get; set; }
-
         public List<(Header, int)> Statistics { get; set; }
+        public Texture TextImage { get; set; }
 
         public void Draw(RenderTarget target, RenderStates states)
         {
@@ -416,7 +438,7 @@ namespace RPGcardsGenerator
                             icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y / 2), Position = position + Size / 2 - new Vector2f(width, 0) });
                         Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize / 2);
                         Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
-                        icons.Add(Statistics[i].Item1.Text);
+                        target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                     else if (position.X > -1)
                     {
@@ -424,7 +446,7 @@ namespace RPGcardsGenerator
                             icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y / 2), Position = position + Size / 2 });
                         Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize / 2);
                         Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0), 0) + position + Size / 2;
-                        icons.Add(Statistics[i].Item1.Text);
+                        target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                     else
                     {
@@ -433,7 +455,7 @@ namespace RPGcardsGenerator
                             icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y / 2), Position = position + Size / 2 - new Vector2f(width, 0) });
                         Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize / 2);
                         Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
-                        icons.Add(Statistics[i].Item1.Text);
+                        target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                 }
                 else if (position.Y < 0)
@@ -445,7 +467,7 @@ namespace RPGcardsGenerator
                             icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y), Position = position + Size / 2 - new Vector2f(width, 0) });
                         Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize);
                         Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
-                        icons.Add(Statistics[i].Item1.Text);
+                        target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                     else if (position.X > -1)
                     {
@@ -453,7 +475,7 @@ namespace RPGcardsGenerator
                             icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y), Position = position + Size / 2 });
                         Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize);
                         Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0), 0) + position + Size / 2;
-                        icons.Add(Statistics[i].Item1.Text);
+                        target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                     else
                     {
@@ -462,7 +484,7 @@ namespace RPGcardsGenerator
                             icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y), Position = position + Size / 2 - new Vector2f(width, 0) });
                         Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize);
                         Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
-                        icons.Add(Statistics[i].Item1.Text);
+                        target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                 }
                 else
@@ -473,14 +495,14 @@ namespace RPGcardsGenerator
                         if (Statistics[i].Item1.Image != null)
                             icons.Add(new Sprite(Statistics[i].Item1.Image) { Position = position - new Vector2f(width, 0) + Size / 2 });
                         Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
-                        icons.Add(Statistics[i].Item1.Text);
+                        target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                     else if (position.X > -1)
                     {
                         if (Statistics[i].Item1.Image != null)
                             icons.Add(new Sprite(Statistics[i].Item1.Image) { Position = position + Size / 2 });
                         Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0), 0) + position + Size / 2;
-                        icons.Add(Statistics[i].Item1.Text);
+                        target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                     else
                     {
@@ -488,7 +510,7 @@ namespace RPGcardsGenerator
                         if (Statistics[i].Item1.Image != null)
                             icons.Add(new Sprite(Statistics[i].Item1.Image) { Position = position - new Vector2f(width, 0) + Size / 2 });
                         Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
-                        icons.Add(Statistics[i].Item1.Text);
+                        target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                 }
             }
@@ -528,14 +550,13 @@ namespace RPGcardsGenerator
         }
 
         public FloatRect Bounds => new FloatRect(0, 0, GetGlobalBounds().Width, CharacterSize);
-
         public bool drawOutline { get; set; }
-
         public int Height => throw new NotImplementedException();
+        public Texture TextImage { get; set; }
 
         public void DrawWidget(RenderTarget target, RenderStates states)
         {
-            Draw(target, states);
+            target.Draw(Utilities.ApplyTexture(this, GetGlobalBounds(), TextImage, this.GetBorderColor().MakeTransparent()), states);
             if (drawOutline)
                 target.Draw(new RectangleShape(new Vector2f(Bounds.Width, Bounds.Height)) { OutlineColor = Color.Green, OutlineThickness = -1, FillColor = Color.Transparent }, states);
         }
