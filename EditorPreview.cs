@@ -32,7 +32,7 @@ namespace RPGcardsGenerator
             while (Window.IsOpen)
             {
                 Window.WaitAndDispatchEvents();
-                Window.Clear();
+                Window.Clear(Color.White);
 
                 foreach (var drawable in ToDraw)
                     Window.Draw(drawable);

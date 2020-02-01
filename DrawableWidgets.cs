@@ -10,13 +10,16 @@ namespace RPGcardsGenerator
 {
     public interface IDrawableWidget : Drawable
     {
+        bool drawOutline { get; set; }
+        FloatRect GlobalBounds { get; }
         int Height { get; }
     }
 
     public class DrawableCounter : Transformable, IDrawableWidget
     {
-        public DrawableCounter()
+        public DrawableCounter() : base()
         {
+            drawOutline = false;
             Back = new List<Texture>();
             Icons = new List<Texture>();
             InternalText = new Text();
@@ -24,8 +27,12 @@ namespace RPGcardsGenerator
 
         public IList<Texture> Back { get; set; }
 
+        public bool drawOutline { get; set; }
+
+        public FloatRect GlobalBounds => throw new NotImplementedException();
+
         public int Height => (Style & Template.Counter.VERTICAL) == 0 ?
-            (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? IconHeight * 1.5f : IconHeight) :
+                            (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? IconHeight * 1.5f : IconHeight) :
             (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? (IconHeight + 4) * .5f * (Max - 1) : (IconHeight + 4) * (Max - 1));
 
         public int IconHeight { get; set; }
@@ -108,13 +115,27 @@ namespace RPGcardsGenerator
 
     public class DrawableField : Text, IDrawableWidget
     {
+        public DrawableField() : base()
+        {
+            drawOutline = false;
+        }
+
+        public bool drawOutline { get; set; }
+        public FloatRect GlobalBounds => GetGlobalBounds();
         public int Height => (int)CharacterSize;
     }
 
     public class DrawableFieldList : Transformable, IDrawableWidget
     {
-        public int Height => throw new NotImplementedException();
+        public DrawableFieldList() : base()
+        {
+            ToDraw = new List<IDrawableWidget>();
+            drawOutline = false;
+        }
 
+        public bool drawOutline { get; set; }
+        public FloatRect GlobalBounds => throw new NotImplementedException();
+        public int Height => throw new NotImplementedException();
         private List<IDrawableWidget> ToDraw { get; set; }
 
         public void Draw(RenderTarget target, RenderStates states)
@@ -134,6 +155,7 @@ namespace RPGcardsGenerator
     {
         public DrawableGauge()
         {
+            drawOutline = false;
             InternalText = new Text();
         }
 
@@ -141,6 +163,8 @@ namespace RPGcardsGenerator
 
         public Texture Bar { get; set; }
 
+        public bool drawOutline { get; set; }
+        public FloatRect GlobalBounds => throw new NotImplementedException();
         public int Height => (int)Math.Max(InternalText.CharacterSize, (int)Bar.Size.Y);
         public Text InternalText { get; set; }
 
@@ -205,20 +229,189 @@ namespace RPGcardsGenerator
 
     public class DrawableImage : RectangleShape, IDrawableWidget
     {
+        public DrawableImage() : base()
+        {
+            drawOutline = false;
+        }
+
+        public bool drawOutline { get; set; }
+        public FloatRect GlobalBounds => GetGlobalBounds();
         public int Height => throw new NotImplementedException();
     }
 
     public class DrawableStatGraph : Transformable, IDrawableWidget
     {
+        public DrawableStatGraph() : base()
+        {
+            drawOutline = false;
+            Statistics = new List<(Header, int)>();
+        }
+
+        public int CharacterHeight { get; set; }
+        public bool drawOutline { get; set; }
+        public FloatRect GlobalBounds => throw new NotImplementedException();
         public int Height => throw new NotImplementedException();
+        public Color? HighGraphColor { get; set; }
+        public Color InnerColor { get; set; }
+        public Color LowGraphColor { get; set; }
+        public int Max { get; set; }
+        public Color OutsideColor { get; set; }
+        public float OutsideThickness { get; set; }
+        public Vector2f Size { get; set; }
+        public List<(Header, int)> Statistics { get; set; }
 
         public void Draw(RenderTarget target, RenderStates states)
         {
+            var highColor = HighGraphColor != null ? HighGraphColor.Value : LowGraphColor;
+            states.Transform *= Transform;
+            var lines = new List<Vertex>();
+            var shape = new List<Vertex>() { new Vertex(Size / 2, LowGraphColor) };
+            var icons = new List<Drawable>();
+            float map(float value, float min, float max, float outMin, float outMax) => (value - min) * (outMax - outMin) / (max - min) + outMin;
+            Color colorMap(float value, float min, float max, Color outMin, Color outMax) => new Color(
+                (byte)map(value, min, max, outMin.R, outMax.R),
+                (byte)map(value, min, max, outMin.G, outMax.G),
+                (byte)map(value, min, max, outMin.B, outMax.B));
+            int min = Max, max = 0;
+            foreach (var item in Statistics)
+            {
+                if (item.Item2 > max)
+                    max = item.Item2;
+                if (item.Item2 < min)
+                    min = item.Item2;
+            }
+            for (int i = 0; i < Statistics.Count; i++)
+            {
+                lines.Add(new Vertex(Size / 2, Color.Black));
+                lines.Add(new Vertex(Size / 2 + new Vector2f((float)(Size.X / 2 * Math.Cos((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2)),
+                                                              (float)(Size.Y / 2 * Math.Sin((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2))), Color.Black));
+                lines.Add(lines.Last());
+                lines.Add(new Vertex(Size / 2 + new Vector2f((float)(Size.X / 2 * Math.Cos((double)(i + 1) / Statistics.Count * 2 * Math.PI - Math.PI / 2)),
+                                                              (float)(Size.Y / 2 * Math.Sin((double)(i + 1) / Statistics.Count * 2 * Math.PI - Math.PI / 2))), Color.Black));
+                lines.Add(new Vertex(Size / 2 + new Vector2f((float)(map(Statistics[i].Item2, 0, Max, 0, Size.X / 2) * Math.Cos((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2)),
+                                                     (float)(map(Statistics[i].Item2, 0, Max, 0, Size.Y / 2) * Math.Sin((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2))), Color.Black));
+                lines.Add(new Vertex(Size / 2 + new Vector2f((float)(map(Statistics[(i + 1) % Statistics.Count].Item2, 0, Max, 0, Size.X / 2) * Math.Cos((double)(i + 1) / Statistics.Count * 2 * Math.PI - Math.PI / 2)),
+                                                              (float)(map(Statistics[(i + 1) % Statistics.Count].Item2, 0, Max, 0, Size.Y / 2) * Math.Sin((double)(i + 1) / Statistics.Count * 2 * Math.PI - Math.PI / 2))), Color.Black));
+                var position = new Vector2f((float)((Size.X / 2 + 5) * Math.Cos((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2)),
+                                                              (float)((Size.Y / 2 + 5) * Math.Sin((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2)));
+                if (Math.Abs(position.Y) < 1)
+                {
+                    if (Math.Abs(position.X) < 1)
+                    {
+                        var width = ((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width) / 2;
+                        if (Statistics[i].Item1.Image != null)
+                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y / 2), Position = position + Size / 2 - new Vector2f(width, 0) });
+                        Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize / 2);
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
+                        icons.Add(Statistics[i].Item1.Text);
+                    }
+                    else if (position.X > -1)
+                    {
+                        if (Statistics[i].Item1.Image != null)
+                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y / 2), Position = position + Size / 2 });
+                        Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize / 2);
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0), 0) + position + Size / 2;
+                        icons.Add(Statistics[i].Item1.Text);
+                    }
+                    else
+                    {
+                        var width = (Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width;
+                        if (Statistics[i].Item1.Image != null)
+                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y / 2), Position = position + Size / 2 - new Vector2f(width, 0) });
+                        Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize / 2);
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
+                        icons.Add(Statistics[i].Item1.Text);
+                    }
+                }
+                else if (position.Y < 0)
+                {
+                    if (Math.Abs(position.X) < 1)
+                    {
+                        var width = ((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width) / 2;
+                        if (Statistics[i].Item1.Image != null)
+                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y), Position = position + Size / 2 - new Vector2f(width, 0) });
+                        Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize);
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
+                        icons.Add(Statistics[i].Item1.Text);
+                    }
+                    else if (position.X > -1)
+                    {
+                        if (Statistics[i].Item1.Image != null)
+                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y), Position = position + Size / 2 });
+                        Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize);
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0), 0) + position + Size / 2;
+                        icons.Add(Statistics[i].Item1.Text);
+                    }
+                    else
+                    {
+                        var width = (Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width;
+                        if (Statistics[i].Item1.Image != null)
+                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y), Position = position + Size / 2 - new Vector2f(width, 0) });
+                        Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize);
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
+                        icons.Add(Statistics[i].Item1.Text);
+                    }
+                }
+                else
+                {
+                    if (Math.Abs(position.X) < 1)
+                    {
+                        var width = ((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width) / 2;
+                        if (Statistics[i].Item1.Image != null)
+                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Position = position - new Vector2f(width, 0) + Size / 2 });
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
+                        icons.Add(Statistics[i].Item1.Text);
+                    }
+                    else if (position.X > -1)
+                    {
+                        if (Statistics[i].Item1.Image != null)
+                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Position = position + Size / 2 });
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0), 0) + position + Size / 2;
+                        icons.Add(Statistics[i].Item1.Text);
+                    }
+                    else
+                    {
+                        var width = (Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width;
+                        if (Statistics[i].Item1.Image != null)
+                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Position = position - new Vector2f(width, 0) + Size / 2 });
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
+                        icons.Add(Statistics[i].Item1.Text);
+                    }
+                }
+            }
+            for (int i = 0; i <= Statistics.Count; i++)
+            {
+                shape.Add(new Vertex(Size / 2 + new Vector2f((float)(map(Statistics[i % Statistics.Count].Item2, 0, Max, 0, Size.X / 2) * Math.Cos((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2)),
+                                                              (float)(map(Statistics[i % Statistics.Count].Item2, 0, Max, 0, Size.Y / 2) * Math.Sin((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2))),
+                                                              colorMap(Statistics[i % Statistics.Count].Item2, min, max, LowGraphColor, highColor)));
+            }
+            target.Draw(shape.ToArray(), PrimitiveType.TriangleFan, states);
+            target.Draw(lines.ToArray(), PrimitiveType.Lines, states);
+            foreach (var item in icons)
+                target.Draw(item, states);
+        }
+
+        public class Header
+        {
+            public Header()
+            {
+                Text = new Text();
+            }
+
+            public Texture Image { get; set; }
+            public Text Text { get; set; }
         }
     }
 
     public class DrawableText : Text, IDrawableWidget
     {
+        public DrawableText() : base()
+        {
+            drawOutline = false;
+        }
+
+        public bool drawOutline { get; set; }
+        public FloatRect GlobalBounds => GetGlobalBounds();
         public int Height => throw new NotImplementedException();
     }
 }

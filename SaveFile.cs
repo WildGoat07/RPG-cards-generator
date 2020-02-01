@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Numerics;
 
 namespace RPGcardsGenerator
 {
@@ -15,7 +16,7 @@ namespace RPGcardsGenerator
 
         public interface IWidget
         {
-            RectangleF Location { get; }
+            Vector2 Location { get; }
         }
 
         public Bitmap Background { get; set; }
@@ -52,7 +53,7 @@ namespace RPGcardsGenerator
             public string Content { get; set; }
             public Color DefaultInnerColor { get; set; }
             public string Font { get; set; }
-            public RectangleF Location { get; set; }
+            public Vector2 Location { get; set; }
             public Color OutsideColor { get; set; }
             public float OutsideThickness { get; set; }
             public int Size { get; set; }
@@ -67,7 +68,7 @@ namespace RPGcardsGenerator
             }
 
             public List<(string, int, float)> Data { get; set; }
-            public RectangleF Location { get; set; }
+            public Vector2 Location { get; set; }
             public Text Model { get; set; }
         }
 
@@ -89,8 +90,7 @@ namespace RPGcardsGenerator
         public class Image : IWidget
         {
             public Bitmap Data { get; set; }
-            public bool KeepFormat { get; set; }
-            public RectangleF Location { get; set; }
+            public Vector2 Location { get; set; }
         }
 
         [Serializable]
@@ -101,12 +101,14 @@ namespace RPGcardsGenerator
                 Statistics = new List<(Header, int)>();
             }
 
+            public int CharacterHeight { get; set; }
             public string Font { get; set; }
             public Color InnerColor { get; set; }
-            public RectangleF Location { get; set; }
+            public Vector2 Location { get; set; }
+            public int Max { get; set; }
             public Color OutsideColor { get; set; }
             public float OutsideThickness { get; set; }
-            public int Size { get; set; }
+            public Vector2 Size { get; set; }
             public List<(Header, int)> Statistics { get; set; }
 
             [Serializable]
@@ -123,7 +125,7 @@ namespace RPGcardsGenerator
             public string Content { get; set; }
             public string Font { get; set; }
             public Color InnerColor { get; set; }
-            public RectangleF Location { get; set; }
+            public Vector2 Location { get; set; }
             public Color OutsideColor { get; set; }
             public float OutsideThickness { get; set; }
             public int Size { get; set; }
