@@ -18,7 +18,7 @@ namespace RPGcardsGenerator
                 mode = new VideoMode(desktop.Width / 2, (uint)(desktop.Width / 2 / ratio));
             else
                 mode = new VideoMode((uint)(desktop.Height / 1.5f * ratio), (uint)(desktop.Height / 1.5f));
-            Window = new RenderWindow(mode, "aperçu", Styles.Titlebar, new ContextSettings { AntialiasingLevel = 8 });
+            Window = new RenderWindow(mode, "aperçu", Styles.Close, new ContextSettings { AntialiasingLevel = 8 });
             Window.SetVerticalSyncEnabled(true);
             ToDraw = new IDrawableWidget[0];
         }
