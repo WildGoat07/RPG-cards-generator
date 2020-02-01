@@ -406,6 +406,7 @@ namespace RPGcardsGenerator
                                                               (float)(map(Statistics[(i + 1) % Statistics.Count].Item2, 0, Max, 0, Size.Y / 2) * Math.Sin((double)(i + 1) / Statistics.Count * 2 * Math.PI - Math.PI / 2))), Color.Black));
                 var position = new Vector2f((float)((Size.X / 2 + 5) * Math.Cos((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2)),
                                                               (float)((Size.Y / 2 + 5) * Math.Sin((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2)));
+                position = (Vector2f)(Vector2i)position;
                 if (Math.Abs(position.Y) < 1)
                 {
                     if (Math.Abs(position.X) < 1)
