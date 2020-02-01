@@ -10,8 +10,8 @@ namespace RPGcardsGenerator
 {
     public interface IDrawableWidget : Drawable
     {
+        FloatRect Bounds { get; }
         bool drawOutline { get; set; }
-        FloatRect GlobalBounds { get; }
         int Height { get; }
     }
 
@@ -27,15 +27,51 @@ namespace RPGcardsGenerator
 
         public IList<Texture> Back { get; set; }
 
+        public FloatRect Bounds
+        {
+            get
+            {
+                if ((Style & Template.Counter.STACKED) != 0)
+                {
+                    var result = new FloatRect();
+                    result.Width = InternalText.GetGlobalBounds().Width + 5 + Icons.First().Size.X;
+                    result.Height = Height;
+                    return result;
+                }
+                else
+                {
+                    if ((Style & Template.Counter.VERTICAL) != 0)
+                    {
+                        var result = new FloatRect();
+                        result.Width = InternalText.GetGlobalBounds().Width + 5;
+                        result.Height = Height;
+                        if ((Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0)
+                            result.Width += (Icons.First().Size.X + 4) * (Max / 2f + .5f);
+                        else
+                            result.Width += (Icons.First().Size.X + 4) * Max;
+                        return result;
+                    }
+                    else
+                    {
+                        var result = new FloatRect();
+                        result.Width = InternalText.GetGlobalBounds().Width + 5;
+                        result.Height = Height;
+                        if ((Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0)
+                            result.Width += (Icons.First().Size.X + 4) * 1.5f;
+                        else
+                            result.Width += Icons.First().Size.X;
+                        return result;
+                    }
+                }
+            }
+        }
+
         public bool drawOutline { get; set; }
 
-        public FloatRect GlobalBounds => throw new NotImplementedException();
-
         public int Height => (Style & Template.Counter.VERTICAL) == 0 ?
-                            (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? IconHeight * 1.5f : IconHeight) :
-            (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? (IconHeight + 4) * .5f * (Max - 1) : (IconHeight + 4) * (Max - 1));
+                            (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? Icons.First().Size.Y * 1.5f : Icons.First().Size.Y) :
+            (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? (Icons.First().Size.Y + 4) * (Max / 2f + .5f) : (Icons.First().Size.Y + 4) * Max);
 
-        public int IconHeight { get; set; }
         public IList<Texture> Icons { get; set; }
         public Text InternalText { get; set; }
         public int Max { get; set; }
@@ -44,11 +80,11 @@ namespace RPGcardsGenerator
 
         public void Draw(RenderTarget target, RenderStates states)
         {
-            int Hspace = (int)(IconHeight * (float)Icons.First().Size.X / Icons.First().Size.Y + 4);
-            int Vspace = IconHeight + 4;
+            int Hspace = (int)(Icons.First().Size.Y * (float)Icons.First().Size.X / Icons.First().Size.Y + 4);
+            int Vspace = (int)Icons.First().Size.Y + 4;
             InternalText.Origin = new Vector2f(0, InternalText.CharacterSize / 2);
             if ((Style & Template.Counter.VERTICAL) == 0)
-                InternalText.Position = new Vector2f(0, (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? IconHeight * 1.5f : IconHeight) / 2);
+                InternalText.Position = new Vector2f(0, (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? Icons.First().Size.Y * 1.5f : Icons.First().Size.Y) / 2);
             else
                 InternalText.Position = new Vector2f(0, (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? Vspace * .5f * (Max - 1) : Vspace * (Max - 1)) / 2);
             states.Transform *= Transform;
@@ -65,16 +101,15 @@ namespace RPGcardsGenerator
                 else if (index > 0)
                     toDraw = Icons[index];
                 var ratio = (float)toDraw.Size.X / toDraw.Size.Y;
-                var rect = new RectangleShape(new Vector2f(IconHeight * ratio, IconHeight)) { Texture = toDraw };
+                var rect = new Sprite(toDraw);
                 target.Draw(rect, states);
             }
             else
             {
                 void disp(Texture toDraw, Vector2f whereToDraw)
                 {
-                    target.Draw(new RectangleShape
+                    target.Draw(new Sprite
                     {
-                        Size = new Vector2f(IconHeight * (float)toDraw.Size.X / toDraw.Size.Y, IconHeight),
                         Position = whereToDraw,
                         Texture = toDraw
                     }, states);
@@ -120,8 +155,8 @@ namespace RPGcardsGenerator
             drawOutline = false;
         }
 
+        public FloatRect Bounds => GetGlobalBounds();
         public bool drawOutline { get; set; }
-        public FloatRect GlobalBounds => GetGlobalBounds();
         public int Height => (int)CharacterSize;
     }
 
@@ -133,10 +168,25 @@ namespace RPGcardsGenerator
             drawOutline = false;
         }
 
+        public FloatRect Bounds
+        {
+            get
+            {
+                var result = new FloatRect();
+                foreach (var item in ToDraw)
+                {
+                    var curr = item.Bounds;
+                    if (curr.Width > result.Width)
+                        result.Width = curr.Width;
+                    result.Height += 5 + curr.Height;
+                }
+                return result;
+            }
+        }
+
         public bool drawOutline { get; set; }
-        public FloatRect GlobalBounds => throw new NotImplementedException();
         public int Height => throw new NotImplementedException();
-        private List<IDrawableWidget> ToDraw { get; set; }
+        public List<IDrawableWidget> ToDraw { get; set; }
 
         public void Draw(RenderTarget target, RenderStates states)
         {
@@ -163,8 +213,19 @@ namespace RPGcardsGenerator
 
         public Texture Bar { get; set; }
 
+        public FloatRect Bounds
+        {
+            get
+            {
+                var result = new FloatRect();
+                result.Width = InternalText.GetGlobalBounds().Width;
+                result.Height = Height;
+                result.Width += 5 + Bar.Size.X;
+                return result;
+            }
+        }
+
         public bool drawOutline { get; set; }
-        public FloatRect GlobalBounds => throw new NotImplementedException();
         public int Height => (int)Math.Max(InternalText.CharacterSize, (int)Bar.Size.Y);
         public Text InternalText { get; set; }
 
@@ -234,8 +295,8 @@ namespace RPGcardsGenerator
             drawOutline = false;
         }
 
+        public FloatRect Bounds => GetGlobalBounds();
         public bool drawOutline { get; set; }
-        public FloatRect GlobalBounds => GetGlobalBounds();
         public int Height => throw new NotImplementedException();
     }
 
@@ -247,9 +308,9 @@ namespace RPGcardsGenerator
             Statistics = new List<(Header, int)>();
         }
 
+        public FloatRect Bounds => new FloatRect(new Vector2f(), Size);
         public int CharacterHeight { get; set; }
         public bool drawOutline { get; set; }
-        public FloatRect GlobalBounds => throw new NotImplementedException();
         public int Height => throw new NotImplementedException();
         public Color? HighGraphColor { get; set; }
         public Color InnerColor { get; set; }
@@ -410,8 +471,8 @@ namespace RPGcardsGenerator
             drawOutline = false;
         }
 
+        public FloatRect Bounds => GetGlobalBounds();
         public bool drawOutline { get; set; }
-        public FloatRect GlobalBounds => GetGlobalBounds();
         public int Height => throw new NotImplementedException();
     }
 }

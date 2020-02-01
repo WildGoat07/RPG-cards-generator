@@ -40,7 +40,6 @@ namespace RPGcardsGenerator
             }
 
             public List<Bitmap> Back { get; set; }
-            public int IconHeight { get; set; }
             public List<Bitmap> Icons { get; set; }
             public int Max { get; set; }
             public int Style { get; set; }
