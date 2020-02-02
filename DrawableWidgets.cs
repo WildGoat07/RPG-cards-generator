@@ -13,6 +13,7 @@ namespace RPGcardsGenerator
         FloatRect Bounds { get; }
         bool drawOutline { get; set; }
         int Height { get; }
+        Template.IWidget Link { get; }
 
         void DrawWidget(RenderTarget target, RenderStates states);
     }
@@ -108,6 +109,7 @@ namespace RPGcardsGenerator
             }
         }
 
+        public Template.Counter Counter { get; set; }
         public bool drawOutline { get; set; }
 
         public int Height => (Style & Template.Counter.VERTICAL) == 0 ?
@@ -116,6 +118,7 @@ namespace RPGcardsGenerator
 
         public IList<Texture> Icons { get; set; }
         public Text InternalText { get; set; }
+        Template.IWidget IDrawableWidget.Link => Counter;
         public int Max { get; set; }
         public int Style { get; set; }
         public Texture TextImage { get; set; }
@@ -205,7 +208,9 @@ namespace RPGcardsGenerator
 
         public FloatRect Bounds => new FloatRect(0, 0, GetGlobalBounds().Width, CharacterSize);
         public bool drawOutline { get; set; }
+        public Template.Field Field { get; set; }
         public int Height => (int)CharacterSize;
+        Template.IWidget IDrawableWidget.Link => Field;
         public Texture TextImage { get; set; }
 
         public void DrawWidget(RenderTarget target, RenderStates states)
@@ -241,7 +246,9 @@ namespace RPGcardsGenerator
         }
 
         public bool drawOutline { get; set; }
+        public Template.FieldList FieldList { get; set; }
         public int Height => throw new NotImplementedException();
+        Template.IWidget IDrawableWidget.Link => FieldList;
         public List<IDrawableWidget> ToDraw { get; set; }
         private IDrawableWidget Template { get; set; }
 
@@ -287,8 +294,10 @@ namespace RPGcardsGenerator
         }
 
         public bool drawOutline { get; set; }
+        public Template.Gauge Gauge { get; set; }
         public int Height => (int)Math.Max(InternalText.CharacterSize, (int)Bar.Size.Y);
         public Text InternalText { get; set; }
+        Template.IWidget IDrawableWidget.Link => Gauge;
         public float Max { get; set; }
         public int Style { get; set; }
         public Texture TextImage { get; set; }
@@ -359,10 +368,10 @@ namespace RPGcardsGenerator
         }
 
         public FloatRect Bounds => GetGlobalBounds();
-
         public bool drawOutline { get; set; }
-
         public int Height => throw new NotImplementedException();
+        public Template.Image Image { get; set; }
+        Template.IWidget IDrawableWidget.Link => Image;
 
         public void DrawWidget(RenderTarget target, RenderStates states)
         {
@@ -386,11 +395,13 @@ namespace RPGcardsGenerator
         public int Height => throw new NotImplementedException();
         public Color? HighGraphColor { get; set; }
         public Color InnerColor { get; set; }
+        Template.IWidget IDrawableWidget.Link => StatGraph;
         public Color LowGraphColor { get; set; }
         public int Max { get; set; }
         public Color OutsideColor { get; set; }
         public float OutsideThickness { get; set; }
         public Vector2f Size { get; set; }
+        public Template.StatGraph StatGraph { get; set; }
         public List<(Header, int)> Statistics { get; set; }
         public Texture TextImage { get; set; }
 
@@ -552,6 +563,8 @@ namespace RPGcardsGenerator
         public FloatRect Bounds => new FloatRect(0, 0, GetGlobalBounds().Width, CharacterSize);
         public bool drawOutline { get; set; }
         public int Height => throw new NotImplementedException();
+        Template.IWidget IDrawableWidget.Link => Text;
+        public Template.Text Text { get; set; }
         public Texture TextImage { get; set; }
 
         public void DrawWidget(RenderTarget target, RenderStates states)
