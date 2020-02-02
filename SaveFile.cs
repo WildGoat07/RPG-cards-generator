@@ -39,24 +39,16 @@ namespace RPGcardsGenerator
                 Icons = new List<Bitmap>();
             }
 
-            public List<Bitmap> Back { get; set; }
-            public List<Bitmap> Icons { get; set; }
+            public IList<Bitmap> Back { get; set; }
+            public IList<Bitmap> Icons { get; set; }
             public int Max { get; set; }
             public int Style { get; set; }
             public int Value { get; set; }
         }
 
         [Serializable]
-        public class Field : IWidget
+        public class Field : Text
         {
-            public string Content { get; set; }
-            public Color DefaultInnerColor { get; set; }
-            public string Font { get; set; }
-            public Vector2 Location { get; set; }
-            public Color OutsideColor { get; set; }
-            public float OutsideThickness { get; set; }
-            public int Size { get; set; }
-            public Bitmap TextImage { get; set; }
         }
 
         [Serializable]
@@ -67,7 +59,7 @@ namespace RPGcardsGenerator
                 Data = new List<(string, int, float)>();
             }
 
-            public List<(string, int, float)> Data { get; set; }
+            public IList<(string, int, float)> Data { get; set; }
             public Vector2 Location { get; set; }
             public Text Model { get; set; }
         }
@@ -103,13 +95,15 @@ namespace RPGcardsGenerator
 
             public int CharacterHeight { get; set; }
             public string Font { get; set; }
+            public Color? HighGraphColor { get; set; }
             public Color InnerColor { get; set; }
             public Vector2 Location { get; set; }
+            public Color LowGraphColor { get; set; }
             public int Max { get; set; }
             public Color OutsideColor { get; set; }
             public float OutsideThickness { get; set; }
             public Vector2 Size { get; set; }
-            public List<(Header, int)> Statistics { get; set; }
+            public IList<(Header, int)> Statistics { get; set; }
             public Bitmap TextImage { get; set; }
 
             [Serializable]

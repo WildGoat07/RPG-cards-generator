@@ -360,7 +360,7 @@ namespace RPGcardsGenerator
         public void DrawWidget(RenderTarget target, RenderStates states) => Draw(target, states);
     }
 
-    public class DrawableImage : RectangleShape, IDrawableWidget
+    public class DrawableImage : Sprite, IDrawableWidget
     {
         public DrawableImage() : base()
         {

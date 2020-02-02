@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -39,7 +40,7 @@ namespace RPGcardsGenerator
             if (dialog.ShowDialog().Value)
             {
                 var template = new Template();
-                template.Background = new System.Drawing.Bitmap(dialog.FileName);
+                template.Background = new Bitmap(dialog.FileName);
                 Visibility = Visibility.Collapsed;
                 App.StartEditor(template);
                 Close();
