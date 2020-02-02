@@ -1,0 +1,14 @@
+﻿<UserControl x:Class="RPGcardsGenerator.WidgetElement"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:RPGcardsGenerator"
+             mc:Ignorable="d">
+    <Grid Margin="5">
+        <TextBlock Name="id" VerticalAlignment="Center" Margin="0,00,0,20" />
+        <Button VerticalAlignment="Center" HorizontalAlignment="Right" Content="↑" Name="upButton" Width="20" Margin="50, 20, 50, 0" />
+        <Button VerticalAlignment="Center" HorizontalAlignment="Right" Content="↓" Name="downButton" Width="20" Margin="25,20,25,0" />
+        <Button VerticalAlignment="Center" HorizontalAlignment="Right" Content="X" Name="deleteButton" Width="20" Margin="0,20,0,0" Foreground="Red" />
+    </Grid>
+</UserControl>
