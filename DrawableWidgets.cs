@@ -249,8 +249,8 @@ namespace RPGcardsGenerator
         public Template.FieldList FieldList { get; set; }
         public int Height => throw new NotImplementedException();
         Template.IWidget IDrawableWidget.Link => FieldList;
+        public IDrawableWidget Template { get; set; }
         public List<IDrawableWidget> ToDraw { get; set; }
-        private IDrawableWidget Template { get; set; }
 
         public void Draw(RenderTarget target, RenderStates states)
         {

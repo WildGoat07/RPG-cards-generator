@@ -12,6 +12,44 @@ using SFML.System;
 
 namespace RPGcardsGenerator
 {
+    public enum RequestType
+    {
+        /// <summary>
+        /// Change to a text field
+        /// </summary>
+        FIELD_CHANGE,
+
+        /// <summary>
+        /// Change to a counting gauge
+        /// </summary>
+        COUNTER_CHANGE,
+
+        /// <summary>
+        /// Removed an item
+        /// </summary>
+        FIELD_LIST_REMOVE,
+
+        /// <summary>
+        /// Added an item
+        /// </summary>
+        FIELD_LIST_ADD,
+
+        /// <summary>
+        /// Edited an item
+        /// </summary>
+        FIELD_LIST_EDIT,
+
+        /// <summary>
+        /// Change to a classic gauge
+        /// </summary>
+        GAUGE_CHANGE,
+
+        /// <summary>
+        /// Change to one of the stats
+        /// </summary>
+        STATS_CHANGE
+    }
+
     public static partial class Utilities
     {
         public static Color ToSFML(this System.Drawing.Color c) => new Color(c.R, c.G, c.B, c.A);
@@ -230,6 +268,71 @@ namespace RPGcardsGenerator
             }
         }
 
+        /// <summary>
+        /// Update to a db.
+        /// </summary>
+        /// <param name="type">Type of widget changed.</param>
+        /// <param name="identifier">Identifier of the widget changed</param>
+        /// <param name="data">New data changed</param>
+        public static void SendData(RequestType type, string identifier, object data)
+        {
+            switch (type)
+            {
+                case RequestType.FIELD_CHANGE:
+                    {
+                        string newText = data as string;
+                        ///stuff
+                    }
+                    break;
+
+                case RequestType.COUNTER_CHANGE:
+                    {
+                        float newValue = (data as float?).Value;
+                        ///stuff
+                    }
+                    break;
+
+                case RequestType.FIELD_LIST_REMOVE:
+                    {
+                        int indexToRemove = (data as int?).Value;
+                        ///stuff
+                    }
+                    break;
+
+                case RequestType.FIELD_LIST_ADD:
+                    {
+                        string newItemCaption = (data as (string, float)?).Value.Item1;
+                        float newItemValue = (data as (string, float)?).Value.Item2;
+                        ///stuff
+                    }
+                    break;
+
+                case RequestType.FIELD_LIST_EDIT:
+                    {
+                        int index = (data as (int, string, float)?).Value.Item1;
+                        string newItemCaption = (data as (int, string, float)?).Value.Item2;
+                        float newItemValue = (data as (int, string, float)?).Value.Item3;
+                        ///stuff
+                    }
+                    break;
+
+                case RequestType.GAUGE_CHANGE:
+                    {
+                        float newValue = (data as float?).Value;
+                        ///stuff
+                    }
+                    break;
+
+                case RequestType.STATS_CHANGE:
+                    {
+                        int index = (data as (int, float)?).Value.Item1;
+                        float newValue = (data as (int, float)?).Value.Item2;
+                        ///stuff
+                    }
+                    break;
+            }
+        }
+
         public static void StartEditor(Template file)
         {
             Fonts = new Dictionary<string, Font>();
@@ -255,6 +358,112 @@ namespace RPGcardsGenerator
             var dialog = new EditorProperties();
             Preview.Window.Closed += (sender, e) => dialog.Dispatcher.Invoke(() => dialog.Close());
             dialog.ShowDialog();
+        }
+
+        public static void UpdateWidgets()
+        {
+            //the key is the identifier of the widgets
+            //the data given must match the one in the following ifs statements
+            Dictionary<string, object> toUpdate = null;
+            //initialize the dictionnary here, with a db request or anything
+            foreach (var entry in toUpdate)
+            {
+                var widget = Preview.ToDraw.FirstOrDefault(dr => CurrentFile.Widgets.Find(d => d.Item2 == dr.Link).Item1 == entry.Key);
+                if (widget is DrawableCounter counter)
+                {
+                    //here it must be float?
+                    var newValues = entry.Value as float?;
+
+                    counter.Value = (int)newValues.Value;
+                    counter.Counter.Value = (int)newValues.Value;
+                }
+                else if (widget is DrawableField field)
+                {
+                    //here it must be string
+                    var newValues = entry.Value as string;
+
+                    field.DisplayedString = newValues;
+                    field.Field.Content = newValues;
+                }
+                else if (widget is DrawableFieldList list)
+                {
+                    //here it must be List<(string, int, float)>
+                    //a list of every element in the field list.
+                    //the string is the text associated with the field
+                    //the float is the value associated with the field (in case it is a gauge, or a counter)
+                    var newValues = entry.Value as List<(string, float)>;
+
+                    list.ToDraw.Clear();
+                    list.FieldList.Data.Clear();
+                    foreach (var value in newValues)
+                    {
+                        if (list.Template is DrawableGauge gaugeModel)
+                        {
+                            list.FieldList.Data.Add((value.Item1, 0, value.Item2));
+                            list.ToDraw.Add(new DrawableGauge
+                            {
+                                Back = gaugeModel.Back,
+                                Bar = gaugeModel.Bar,
+                                InternalText = new Text(gaugeModel.InternalText)
+                                {
+                                    DisplayedString = value.Item1
+                                },
+                                Max = gaugeModel.Max,
+                                Style = gaugeModel.Style,
+                                TextImage = gaugeModel.TextImage,
+                                Value = value.Item2
+                            });
+                        }
+                        else if (list.Template is DrawableCounter counterModel)
+                        {
+                            list.FieldList.Data.Add((value.Item1, 0, value.Item2));
+                            list.ToDraw.Add(new DrawableCounter
+                            {
+                                Back = counterModel.Back,
+                                Icons = counterModel.Icons,
+                                InternalText = new Text(counterModel.InternalText)
+                                {
+                                    DisplayedString = value.Item1
+                                },
+                                Max = counterModel.Max,
+                                Style = counterModel.Style,
+                                TextImage = counterModel.TextImage,
+                                Value = (int)value.Item2
+                            });
+                        }
+                        else if (list.Template is DrawableField fieldModel)
+                        {
+                            list.FieldList.Data.Add((value.Item1, 0, value.Item2));
+                            list.ToDraw.Add(new DrawableField
+                            {
+                                CharacterSize = fieldModel.CharacterSize,
+                                DisplayedString = value.Item1,
+                                FillColor = fieldModel.FillColor,
+                                Font = fieldModel.Font,
+                                OutlineColor = fieldModel.OutlineColor,
+                                OutlineThickness = fieldModel.OutlineThickness
+                            });
+                        }
+                    }
+                }
+                else if (widget is DrawableGauge gauge)
+                {
+                    //here it must be float?
+                    var newValues = entry.Value as float?;
+
+                    gauge.Value = (int)newValues.Value;
+                    gauge.Gauge.Value = (int)newValues.Value;
+                }
+                else if (widget is DrawableStatGraph graph)
+                {
+                    //here it must be List<int>
+                    //a list of the all values of the graph
+                    var newValues = entry.Value as List<int>;
+
+                    for (int i = 0; i < newValues.Count; i++)
+                        graph.Statistics[i] = (graph.Statistics[i].Item1, newValues[i]);
+                }
+            }
         }
     }
 }
