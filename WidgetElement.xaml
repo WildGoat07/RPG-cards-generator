@@ -5,10 +5,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:RPGcardsGenerator"
              mc:Ignorable="d">
-    <Grid Margin="5">
-        <TextBlock Name="id" VerticalAlignment="Center" Margin="0,00,0,20" />
-        <Button VerticalAlignment="Center" HorizontalAlignment="Right" Content="↑" Name="upButton" Width="20" Margin="50, 20, 50, 0" />
-        <Button VerticalAlignment="Center" HorizontalAlignment="Right" Content="↓" Name="downButton" Width="20" Margin="25,20,25,0" />
-        <Button VerticalAlignment="Center" HorizontalAlignment="Right" Content="X" Name="deleteButton" Width="20" Margin="0,20,0,0" Foreground="Red" />
+    <Grid>
+        <Rectangle Stroke="#4CFFFFFF" Margin="0,0,0,-2" />
+        <StackPanel Margin="5">
+            <TextBlock Name="id" VerticalAlignment="Top" />
+            <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
+                <Button VerticalAlignment="Center" Content="X" Name="deleteButton" Width="20" Foreground="Red" />
+                <Button VerticalAlignment="Center" Content="↓" Name="downButton" Width="20" Margin="5,0" Click="downButton_Click" />
+                <Button VerticalAlignment="Center" Content="↑" Name="upButton" Width="20" Margin="5,0" Click="upButton_Click" />
+            </StackPanel>
+        </StackPanel>
     </Grid>
 </UserControl>

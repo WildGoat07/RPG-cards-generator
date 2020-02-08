@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,20 +13,23 @@ using System.Windows.Shapes;
 namespace RPGcardsGenerator
 {
     /// <summary>
-    /// Logique d'interaction pour EditorProperties.xaml
+    /// Logique d'interaction pour NewWidget.xaml
     /// </summary>
-    public partial class EditorProperties : Window
+    public partial class NewWidget : Window
     {
-        public EditorProperties() : base()
+        public NewWidget()
         {
             InitializeComponent();
-            foreach (var widget in App.CurrentFile.Widgets)
-                widgets.Children.Add(new WidgetElement(App.Preview.ToDraw.First((set) => set.Link == widget.Item2)));
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            new Options().ShowDialog();
+            DialogResult = false;
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            DialogResult = true;
         }
     }
 }

@@ -15,8 +15,10 @@
             <RowDefinition Height="40" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Button Grid.RowSpan="2" Content="Sauvegarder" Margin="5" Height="25" Width="85" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <Button Grid.RowSpan="2" Content="Options" Margin="95,5,0,0" Height="25" Width="65" VerticalAlignment="Top" HorizontalAlignment="Left" Click="Button_Click" />
+        <Grid Grid.ColumnSpan="2">
+            <Button Content="Sauvegarder" Margin="5" Height="25" Width="85" VerticalAlignment="Top" HorizontalAlignment="Left" />
+            <Button Content="Options" Margin="95,5,0,0" Height="25" Width="65" VerticalAlignment="Top" HorizontalAlignment="Left" Click="Button_Click" />
+        </Grid>
         <ContentControl Grid.Row="1" Grid.Column="1" x:Name="Slot" />
         <StackPanel x:Name="widgets" Grid.Row="1" />
     </Grid>

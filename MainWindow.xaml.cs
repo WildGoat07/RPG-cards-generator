@@ -10,7 +10,6 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
@@ -42,6 +41,25 @@ namespace RPGcardsGenerator
                 var template = new Template();
                 template.Background = new Bitmap(dialog.FileName);
                 Visibility = Visibility.Collapsed;
+                template.Widgets.Add((
+                "test",
+                new Template.Text
+                {
+                    Content = "test",
+                    Font = "Roboto",
+                    InnerColor = Color.Black,
+                    Size = 25
+                }));
+                template.Widgets.Add((
+                "test2",
+                new Template.Text
+                {
+                    Location = new System.Numerics.Vector2(2),
+                    Content = "test2",
+                    Font = "Roboto",
+                    InnerColor = Color.Red,
+                    Size = 25
+                }));
                 App.StartEditor(template);
                 Close();
             }

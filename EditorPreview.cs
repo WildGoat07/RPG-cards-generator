@@ -5,6 +5,7 @@ using SFML;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using System.Linq;
 
 namespace RPGcardsGenerator
 {
@@ -36,7 +37,7 @@ namespace RPGcardsGenerator
 
                 if (Background != null)
                     Window.Draw(Background);
-                foreach (var drawable in ToDraw)
+                foreach (var drawable in ToDraw.Reverse())
                     drawable.DrawWidget(Window);
 
                 Window.Display();
