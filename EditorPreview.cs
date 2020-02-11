@@ -32,7 +32,7 @@ namespace RPGcardsGenerator
         {
             while (Window.IsOpen)
             {
-                Window.WaitAndDispatchEvents();
+                Window.DispatchEvents();
                 Window.Clear(Color.White);
 
                 if (Background != null)
