@@ -9,6 +9,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using SFML.Graphics;
 using SFML.System;
+using SFML.Window;
 
 namespace RPGcardsGenerator
 {
@@ -69,6 +70,7 @@ namespace RPGcardsGenerator
         public static Template CurrentFile { get; set; }
         public static Dictionary<string, Font> Fonts { get; set; }
         public static EditorPreview Preview { get; set; }
+        public static IDrawableWidget SelectedEditingWidget { get; set; }
         public static RenderTexture VBO { get; set; }
 
         public static Image CreateSFMLImage(System.Drawing.Bitmap img)
@@ -354,6 +356,11 @@ namespace RPGcardsGenerator
             Task.Run(() =>
             {
                 Preview = new EditorPreview((float)file.Background.Width / file.Background.Height);
+                Preview.Window.MouseButtonPressed += (sender, e) =>
+                {
+                    if (e.Button == Mouse.Button.Right)
+                        App.Current.Dispatcher.Invoke(() => new NewWidget(Preview.Window.MapPixelToCoords(new Vector2i(e.X, e.Y))).ShowDialog());
+                };
                 Preview.Start();
             });
             while (Preview == null) System.Threading.Thread.Sleep(100);

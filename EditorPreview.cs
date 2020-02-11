@@ -23,11 +23,6 @@ namespace RPGcardsGenerator
             Window.SetVerticalSyncEnabled(true);
             ToDraw = new IDrawableWidget[0];
             Window.SetView(new View(new FloatRect(0, 0, 1000 * ratio, 1000)));
-            Window.MouseButtonPressed += (sender, e) =>
-            {
-                if (e.Button == Mouse.Button.Right)
-                    App.Current.Dispatcher.Invoke(() => new NewWidget(e.X / (float)Window.Size.X, e.Y / (float)Window.Size.Y).ShowDialog());
-            };
         }
 
         public Texture Background { get; set; }
