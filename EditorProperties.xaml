@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RPGcardsGenerator"
         mc:Ignorable="d"
-        Title="Propriétés" Height="600" Width="450" Background="#141414">
+        Title="Propriétés" Height="600" Width="450" Background="#141414" MinWidth="300" MinHeight="500">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*" />
@@ -20,6 +20,8 @@
             <Button Content="Options" Margin="95,5,0,0" Height="25" Width="65" VerticalAlignment="Top" HorizontalAlignment="Left" Click="Button_Click" />
         </Grid>
         <ContentControl Grid.Row="1" Grid.Column="1" x:Name="Slot" />
-        <StackPanel x:Name="widgets" Grid.Row="1" />
+        <ScrollViewer Grid.Row="1">
+            <StackPanel x:Name="widgets" />
+        </ScrollViewer>
     </Grid>
 </Window>

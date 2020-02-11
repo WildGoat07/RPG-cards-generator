@@ -5,9 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RPGcardsGenerator"
         mc:Ignorable="d"
-        Title="Nouveau widget" Height="174" Width="300" Background="#FF141414" ResizeMode="CanMinimize" ShowInTaskbar="False">
+        Title="Nouveau widget" Height="174" Width="300" Background="#FF141414" ResizeMode="CanMinimize" ShowInTaskbar="False" WindowStartupLocation="CenterScreen" Topmost="True">
     <Grid>
-        <TextBlock VerticalAlignment="Top" Text="Identifiant :" />
+        <TextBlock VerticalAlignment="Top" Text="Identifiant :" Name="identifierText" />
         <TextBox VerticalAlignment="Top" Margin="0,20" Name="identifier" />
         <WrapPanel Margin="0,40,0,0" VerticalAlignment="Top">
             <RadioButton x:Name="fieldWidget" Content="Champ" IsChecked="True" HorizontalAlignment="Left" />
@@ -19,8 +19,8 @@
             <RadioButton x:Name="GraphWidget" Content="Graphique de stats" HorizontalAlignment="Left" />
         </WrapPanel>
         <StackPanel VerticalAlignment="Bottom" Orientation="Horizontal" FlowDirection="RightToLeft">
-            <Button Content="Annuler" Width="50" Height="25" Margin="5" Click="Button_Click" />
-            <Button Content="Ok" Width="50" Height="25" Margin="5" Click="Button_Click_1" />
+            <Button Content="Annuler" Width="50" Height="25" Margin="5" Click="Button_Click" IsCancel="True" />
+            <Button Content="Ok" Width="50" Height="25" Margin="5" Click="Button_Click_1" IsDefault="True" />
         </StackPanel>
     </Grid>
 </Window>

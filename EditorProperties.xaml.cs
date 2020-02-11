@@ -18,11 +18,20 @@ namespace RPGcardsGenerator
     /// </summary>
     public partial class EditorProperties : Window
     {
+        private static EditorProperties Instance;
+
         public EditorProperties() : base()
         {
+            Instance = this;
             InitializeComponent();
+            UpdateWidgetList();
+        }
+
+        public static void UpdateWidgetList()
+        {
+            Instance.widgets.Children.Clear();
             foreach (var widget in App.CurrentFile.Widgets)
-                widgets.Children.Add(new WidgetElement(App.Preview.ToDraw.First((set) => set.Link == widget.Item2)));
+                Instance.widgets.Children.Add(new WidgetElement(App.Preview.ToDraw.First((set) => set.Link == widget.Item2)));
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
