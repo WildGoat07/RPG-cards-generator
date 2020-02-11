@@ -22,9 +22,15 @@ namespace RPGcardsGenerator
             Window = new RenderWindow(mode, "aperçu", Styles.Close, new ContextSettings { AntialiasingLevel = 8 });
             Window.SetVerticalSyncEnabled(true);
             ToDraw = new IDrawableWidget[0];
+            Window.SetView(new View(new FloatRect(0, 0, 1000 * ratio, 1000)));
+            Window.MouseButtonPressed += (sender, e) =>
+            {
+                if (e.Button == Mouse.Button.Right)
+                    App.Current.Dispatcher.Invoke(() => new NewWidget(e.X / (float)Window.Size.X, e.Y / (float)Window.Size.Y).ShowDialog());
+            };
         }
 
-        public Drawable Background { get; set; }
+        public Texture Background { get; set; }
         public IList<IDrawableWidget> ToDraw { get; set; }
         public RenderWindow Window { get; set; }
 
@@ -36,7 +42,7 @@ namespace RPGcardsGenerator
                 Window.Clear(Color.White);
 
                 if (Background != null)
-                    Window.Draw(Background);
+                    Window.Draw(new RectangleShape(new Vector2f(1, 1).Multiply(Window.GetView().Size)) { Texture = Background });
                 foreach (var drawable in ToDraw.Reverse())
                     drawable.DrawWidget(Window);
 

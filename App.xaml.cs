@@ -52,6 +52,8 @@ namespace RPGcardsGenerator
 
     public static partial class Utilities
     {
+        public static Vector2f Multiply(this Vector2f left, Vector2f right) => new Vector2f(left.X * right.X, left.Y * right.Y);
+
         public static Color ToSFML(this System.Drawing.Color c) => new Color(c.R, c.G, c.B, c.A);
 
         public static Vector2f ToSFML(this System.Numerics.Vector2 v) => new Vector2f(v.X, v.Y);
@@ -246,6 +248,8 @@ namespace RPGcardsGenerator
                 result.OutsideColor = graph.OutsideColor.ToSFML();
                 result.OutsideThickness = graph.OutsideThickness;
                 result.Size = graph.Size.ToSFML();
+                result.IconsSize = graph.IconsSize.ToSFML();
+                if (graph.TextImage != null)
                 {
                     using var stream = new MemoryStream();
                     graph.TextImage.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
@@ -255,6 +259,15 @@ namespace RPGcardsGenerator
                 foreach (var stat in graph.Statistics)
                 {
                     var header = (new DrawableStatGraph.Header(), stat.Item2);
+                    header.Item1.Text = new Text
+                    {
+                        CharacterSize = (uint)result.CharacterHeight,
+                        DisplayedString = stat.Item1.Text,
+                        FillColor = result.InnerColor,
+                        Font = Fonts[graph.Font],
+                        OutlineColor = graph.OutsideColor.ToSFML(),
+                        OutlineThickness = graph.OutsideThickness
+                    };
                     result.Statistics.Add(header);
                     if (stat.Item1.Image != null)
                     {
@@ -346,10 +359,7 @@ namespace RPGcardsGenerator
             while (Preview == null) System.Threading.Thread.Sleep(100);
             var list = new List<IDrawableWidget>();
             Preview.ToDraw = list;
-            /*Preview.Background = new RectangleShape(new Vector2f(Preview.Window.Size.X, Preview.Window.Size.Y))
-            {
-                Texture = new Texture(CreateSFMLImage(file.Background)) { Smooth = true }
-            };*/
+            Preview.Background = new Texture(CreateSFMLImage(file.Background)) { Smooth = true };
             Fonts.Add("Roboto", Roboto);
             foreach (var font in file.CustomFonts)
                 Fonts.Add(font.Key, new Font(font.Value));

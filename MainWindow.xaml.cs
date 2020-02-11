@@ -54,11 +54,68 @@ namespace RPGcardsGenerator
                 "test2",
                 new Template.Text
                 {
-                    Location = new System.Numerics.Vector2(2),
+                    Location = new System.Numerics.Vector2(80),
                     Content = "test2",
                     Font = "Roboto",
                     InnerColor = Color.Red,
                     Size = 25
+                }));
+                template.Widgets.Add((
+                "test3",
+                new Template.StatGraph
+                {
+                    CharacterHeight = 25,
+                    Font = "Roboto",
+                    IconsSize = new System.Numerics.Vector2(30),
+                    InnerColor = Color.Black,
+                    Location = new System.Numerics.Vector2(150),
+                    Max = 100,
+                    LowGraphColor = Color.Red,
+                    HighGraphColor = Color.Yellow,
+                    Size = new System.Numerics.Vector2(500),
+                    Statistics = new List<(Template.StatGraph.Header, int)>
+                    {
+                        (
+                            new Template.StatGraph.Header
+                            {
+                                 Image = new Bitmap("test2.png"),
+                                  Text = "value 1"
+                            },
+                            30
+                        ),
+                        (
+                            new Template.StatGraph.Header
+                            {
+                                 Image = new Bitmap("test3.png"),
+                                  Text = "value 2"
+                            },
+                            20
+                        ),
+                        (
+                            new Template.StatGraph.Header
+                            {
+                                 Image = new Bitmap("test4.png"),
+                                  Text = "value 3"
+                            },
+                            80
+                        ),
+                        (
+                            new Template.StatGraph.Header
+                            {
+                                 Image = new Bitmap("test4.png"),
+                                  Text = "value 3"
+                            },
+                            50
+                        ),
+                        (
+                            new Template.StatGraph.Header
+                            {
+                                 Image = new Bitmap("test4.png"),
+                                  Text = "value 3"
+                            },
+                            100
+                        )
+                    }
                 }));
                 App.StartEditor(template);
                 Close();

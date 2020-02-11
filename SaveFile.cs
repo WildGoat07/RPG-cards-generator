@@ -40,6 +40,7 @@ namespace RPGcardsGenerator
             }
 
             public IList<Bitmap> Back { get; set; }
+            public float Height { get; set; }
             public IList<Bitmap> Icons { get; set; }
             public int Max { get; set; }
             public int Style { get; set; }
@@ -73,6 +74,7 @@ namespace RPGcardsGenerator
             public const int VERTICAL = 8;
             public Bitmap Back { get; set; }
             public Bitmap Bar { get; set; }
+            public float Height { get; set; }
             public float Max { get; set; }
             public int Style { get; set; }
             public float Value { get; set; }
@@ -83,6 +85,7 @@ namespace RPGcardsGenerator
         {
             public Bitmap Data { get; set; }
             public Vector2 Location { get; set; }
+            public Vector2 Size { get; set; }
         }
 
         [Serializable]
@@ -96,6 +99,7 @@ namespace RPGcardsGenerator
             public int CharacterHeight { get; set; }
             public string Font { get; set; }
             public Color? HighGraphColor { get; set; }
+            public Vector2 IconsSize { get; set; }
             public Color InnerColor { get; set; }
             public Vector2 Location { get; set; }
             public Color LowGraphColor { get; set; }
