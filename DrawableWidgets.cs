@@ -117,6 +117,7 @@ namespace RPGcardsGenerator
             (int)Math.Max(InternalText.CharacterSize, (Style & (Template.Counter.ALT1 | Template.Counter.ALT2)) != 0 ? (Icons.First().Size.Y + 4) * (Max / 2f + .5f) : (Icons.First().Size.Y + 4) * Max);
 
         public IList<Texture> Icons { get; set; }
+        public float ImgHeight { private get; set; }
         public Text InternalText { get; set; }
         Template.IWidget IDrawableWidget.Link => Counter;
         public int Max { get; set; }
@@ -148,17 +149,20 @@ namespace RPGcardsGenerator
                 else if (index > 0)
                     toDraw = Icons[index];
                 var ratio = (float)toDraw.Size.X / toDraw.Size.Y;
-                var rect = new Sprite(toDraw);
+                var scale = ImgHeight / toDraw.Size.Y;
+                var rect = new Sprite(toDraw) { Scale = new Vector2f(scale, scale) };
                 target.Draw(rect, states);
             }
             else
             {
                 void disp(Texture toDraw, Vector2f whereToDraw)
                 {
+                    var scale = ImgHeight / toDraw.Size.Y;
                     target.Draw(new Sprite
                     {
                         Position = whereToDraw,
-                        Texture = toDraw
+                        Texture = toDraw,
+                        Scale = new Vector2f(scale, scale)
                     }, states);
                 }
                 for (int i = 1; i <= Max; i++)
@@ -296,6 +300,7 @@ namespace RPGcardsGenerator
         public bool drawOutline { get; set; }
         public Template.Gauge Gauge { get; set; }
         public int Height => (int)Math.Max(InternalText.CharacterSize, (int)Bar.Size.Y);
+        public float ImgHeight { private get; set; }
         public Text InternalText { get; set; }
         Template.IWidget IDrawableWidget.Link => Gauge;
         public float Max { get; set; }
@@ -313,9 +318,10 @@ namespace RPGcardsGenerator
             tr.Translate(InternalText.GetGlobalBounds().Width + 5, 0);
             states.Transform *= tr;
             target.Draw(new RectangleShape { Size = (Vector2f)Bar.Size, Texture = Back }, states);
+            var scale = ImgHeight / Bar.Size.Y;
             if ((Style & Template.Gauge.VERTICAL) == 0)
             {
-                var rect = new RectangleShape(new Vector2f(Bar.Size.X * Value / Max, Bar.Size.Y));
+                var rect = new RectangleShape(new Vector2f(Bar.Size.X * Value / Max, Bar.Size.Y)) { Scale = new Vector2f(scale, scale) };
                 rect.Texture = Bar;
                 if ((Style & Template.Gauge.LEFT) != 0)
                     rect.TextureRect = new IntRect(0, 0, (int)(Bar.Size.X * Value / Max), (int)Bar.Size.Y);
@@ -335,7 +341,7 @@ namespace RPGcardsGenerator
             }
             else
             {
-                var rect = new RectangleShape(new Vector2f(Bar.Size.X, Bar.Size.Y * Value / Max));
+                var rect = new RectangleShape(new Vector2f(Bar.Size.X, Bar.Size.Y * Value / Max)) { Scale = new Vector2f(scale, scale) };
                 rect.Texture = Bar;
                 if ((Style & Template.Gauge.LEFT) != 0)
                     rect.TextureRect = new IntRect(0, 0, (int)Bar.Size.X, (int)(Bar.Size.Y * Value / Max));
@@ -371,13 +377,14 @@ namespace RPGcardsGenerator
         public bool drawOutline { get; set; }
         public int Height => throw new NotImplementedException();
         public Template.Image Image { get; set; }
+        public Vector2f ImgSize { private get; set; }
         Template.IWidget IDrawableWidget.Link => Image;
 
         public void DrawWidget(RenderTarget target, RenderStates states)
         {
             Draw(target, states);
             if (drawOutline)
-                target.Draw(new RectangleShape(new Vector2f(Bounds.Width, Bounds.Height)) { OutlineColor = Color.Green, OutlineThickness = -1, FillColor = Color.Transparent }, states);
+                target.Draw(new RectangleShape(ImgSize) { OutlineColor = Color.Green, OutlineThickness = -1, FillColor = Color.Transparent }, states);
         }
     }
 
@@ -394,6 +401,7 @@ namespace RPGcardsGenerator
         public bool drawOutline { get; set; }
         public int Height => throw new NotImplementedException();
         public Color? HighGraphColor { get; set; }
+        public Vector2f IconsSize { private get; set; }
         public Color InnerColor { get; set; }
         Template.IWidget IDrawableWidget.Link => StatGraph;
         public Color LowGraphColor { get; set; }
@@ -410,7 +418,6 @@ namespace RPGcardsGenerator
             var highColor = HighGraphColor != null ? HighGraphColor.Value : LowGraphColor;
             states.Transform *= Transform;
             var lines = new List<Vertex>();
-            var shape = new List<Vertex>() { new Vertex(Size / 2, LowGraphColor) };
             var icons = new List<Drawable>();
             float map(float value, float min, float max, float outMin, float outMax) => (value - min) * (outMax - outMin) / (max - min) + outMin;
             Color colorMap(float value, float min, float max, Color outMin, Color outMax) => new Color(
@@ -418,6 +425,7 @@ namespace RPGcardsGenerator
                 (byte)map(value, min, max, outMin.G, outMax.G),
                 (byte)map(value, min, max, outMin.B, outMax.B));
             int min = Max, max = 0;
+            var shape = new List<Vertex>() { new Vertex(Size / 2, colorMap(1, 0, 2, LowGraphColor, highColor)) };
             foreach (var item in Statistics)
             {
                 if (item.Item2 > max)
@@ -444,28 +452,28 @@ namespace RPGcardsGenerator
                 {
                     if (Math.Abs(position.X) < 1)
                     {
-                        var width = ((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width) / 2;
+                        var width = ((Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width) / 2;
                         if (Statistics[i].Item1.Image != null)
-                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y / 2), Position = position + Size / 2 - new Vector2f(width, 0) });
+                            icons.Add(new RectangleShape(IconsSize) { Texture = Statistics[i].Item1.Image, Origin = new Vector2f(0, IconsSize.Y / 2), Position = position + Size / 2 - new Vector2f(width, 0) });
                         Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize / 2);
-                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0) - width, 0) + position + Size / 2;
                         target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                     else if (position.X > -1)
                     {
                         if (Statistics[i].Item1.Image != null)
-                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y / 2), Position = position + Size / 2 });
+                            icons.Add(new RectangleShape(IconsSize) { Texture = Statistics[i].Item1.Image, Origin = new Vector2f(0, IconsSize.Y / 2), Position = position + Size / 2 });
                         Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize / 2);
-                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0), 0) + position + Size / 2;
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0), 0) + position + Size / 2;
                         target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                     else
                     {
-                        var width = (Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width;
+                        var width = (Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width;
                         if (Statistics[i].Item1.Image != null)
-                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y / 2), Position = position + Size / 2 - new Vector2f(width, 0) });
+                            icons.Add(new RectangleShape(IconsSize) { Texture = Statistics[i].Item1.Image, Origin = new Vector2f(0, IconsSize.Y / 2), Position = position + Size / 2 - new Vector2f(width, 0) });
                         Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize / 2);
-                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0) - width, 0) + position + Size / 2;
                         target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                 }
@@ -473,28 +481,28 @@ namespace RPGcardsGenerator
                 {
                     if (Math.Abs(position.X) < 1)
                     {
-                        var width = ((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width) / 2;
+                        var width = ((Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width) / 2;
                         if (Statistics[i].Item1.Image != null)
-                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y), Position = position + Size / 2 - new Vector2f(width, 0) });
+                            icons.Add(new RectangleShape(IconsSize) { Texture = Statistics[i].Item1.Image, Origin = new Vector2f(0, IconsSize.Y), Position = position + Size / 2 - new Vector2f(width, 0) });
                         Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize);
-                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0) - width, 0) + position + Size / 2;
                         target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                     else if (position.X > -1)
                     {
                         if (Statistics[i].Item1.Image != null)
-                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y), Position = position + Size / 2 });
+                            icons.Add(new RectangleShape(IconsSize) { Texture = Statistics[i].Item1.Image, Origin = new Vector2f(0, IconsSize.Y), Position = position + Size / 2 });
                         Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize);
-                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0), 0) + position + Size / 2;
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0), 0) + position + Size / 2;
                         target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                     else
                     {
-                        var width = (Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width;
+                        var width = (Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width;
                         if (Statistics[i].Item1.Image != null)
-                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Origin = new Vector2f(0, Statistics[i].Item1.Image.Size.Y), Position = position + Size / 2 - new Vector2f(width, 0) });
+                            icons.Add(new RectangleShape(IconsSize) { Texture = Statistics[i].Item1.Image, Origin = new Vector2f(0, IconsSize.Y), Position = position + Size / 2 - new Vector2f(width, 0) });
                         Statistics[i].Item1.Text.Origin = new Vector2f(0, Statistics[i].Item1.Text.CharacterSize);
-                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0) - width, 0) + position + Size / 2;
                         target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                 }
@@ -502,34 +510,39 @@ namespace RPGcardsGenerator
                 {
                     if (Math.Abs(position.X) < 1)
                     {
-                        var width = ((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width) / 2;
+                        var width = ((Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width) / 2;
                         if (Statistics[i].Item1.Image != null)
-                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Position = position - new Vector2f(width, 0) + Size / 2 });
-                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
+                            icons.Add(new RectangleShape(IconsSize) { Texture = Statistics[i].Item1.Image, Position = position - new Vector2f(width, 0) + Size / 2 });
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0) - width, 0) + position + Size / 2;
                         target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                     else if (position.X > -1)
                     {
                         if (Statistics[i].Item1.Image != null)
-                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Position = position + Size / 2 });
-                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0), 0) + position + Size / 2;
+                            icons.Add(new RectangleShape(IconsSize) { Texture = Statistics[i].Item1.Image, Position = position + Size / 2 });
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0), 0) + position + Size / 2;
                         target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                     else
                     {
-                        var width = (Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width;
+                        var width = (Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0) + Statistics[i].Item1.Text.GetGlobalBounds().Width;
                         if (Statistics[i].Item1.Image != null)
-                            icons.Add(new Sprite(Statistics[i].Item1.Image) { Position = position - new Vector2f(width, 0) + Size / 2 });
-                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? Statistics[i].Item1.Image.Size.X + 5 : 0) - width, 0) + position + Size / 2;
+                            icons.Add(new RectangleShape(IconsSize) { Texture = Statistics[i].Item1.Image, Position = position - new Vector2f(width, 0) + Size / 2 });
+                        Statistics[i].Item1.Text.Position = new Vector2f((Statistics[i].Item1.Image != null ? IconsSize.X + 5 : 0) - width, 0) + position + Size / 2;
                         target.Draw(Utilities.ApplyTexture(Statistics[i].Item1.Text, Statistics[i].Item1.Text.GetGlobalBounds(), TextImage, Statistics[i].Item1.Text.GetBorderColor().MakeTransparent()), states);
                     }
                 }
             }
             for (int i = 0; i <= Statistics.Count; i++)
             {
-                shape.Add(new Vertex(Size / 2 + new Vector2f((float)(map(Statistics[i % Statistics.Count].Item2, 0, Max, 0, Size.X / 2) * Math.Cos((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2)),
-                                                              (float)(map(Statistics[i % Statistics.Count].Item2, 0, Max, 0, Size.Y / 2) * Math.Sin((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2))),
-                                                              colorMap(Statistics[i % Statistics.Count].Item2, min, max, LowGraphColor, highColor)));
+                if (min != max)
+                    shape.Add(new Vertex(Size / 2 + new Vector2f((float)(map(Statistics[i % Statistics.Count].Item2, 0, Max, 0, Size.X / 2) * Math.Cos((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2)),
+                                                                  (float)(map(Statistics[i % Statistics.Count].Item2, 0, Max, 0, Size.Y / 2) * Math.Sin((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2))),
+                                                                  colorMap(Statistics[i % Statistics.Count].Item2, min, max, LowGraphColor, highColor)));
+                else
+                    shape.Add(new Vertex(Size / 2 + new Vector2f((float)(map(Statistics[i % Statistics.Count].Item2, 0, Max, 0, Size.X / 2) * Math.Cos((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2)),
+                                                                  (float)(map(Statistics[i % Statistics.Count].Item2, 0, Max, 0, Size.Y / 2) * Math.Sin((double)i / Statistics.Count * 2 * Math.PI - Math.PI / 2))),
+                                                                  colorMap(1, 0, 1, LowGraphColor, highColor)));
             }
             target.Draw(shape.ToArray(), PrimitiveType.TriangleFan, states);
             target.Draw(lines.ToArray(), PrimitiveType.Lines, states);
